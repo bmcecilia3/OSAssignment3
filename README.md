@@ -85,4 +85,4 @@ Preemptive Priority:
 
 compile: make
 
-run: ./bin/osscheduler
+run: ./bin/osscheduler /resrc/config_01.txt
