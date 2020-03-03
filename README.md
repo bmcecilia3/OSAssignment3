@@ -85,4 +85,4 @@ Preemptive Priority:
 
 compile: make
 
-run: ./bin/main
+run: ./bin/osscheduler
