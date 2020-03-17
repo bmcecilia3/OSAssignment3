@@ -82,13 +82,33 @@ int main(int argc, char **argv)
         clearOutput(num_lines);
 
         // start new processes at their appropriate start time
+        
 
         // determine when an I/O burst finishes and put the process back in the ready queue
 
         // sort the ready queue (if needed - based on scheduling algorithm)
-
+        //enum ScheduleAlgorithm : uint8_t { FCFS, SJF, RR, PP };
+        
+        if (shared_data->algorithm == SJF)
+        {
+            //if algorithm is Shortest Job First, sort by shortest remaining CPU time
+        }
+        else if (shared_data->algorithm == PP)
+        {
+            //if algorithm is Preemptive Priority, sort by highest priority (lowest number)
+        }
+        
         // determine if all processes are in the terminated state
-
+        shared_data->all_terminated = true;
+        for (i = 0; i < config->num_processes; i++)
+        {
+            if (processes[i]->getState() != Process::State::Terminated)
+            {
+                shared_data->all_terminated = false;
+                break;
+            }
+        }
+        
         // output process status table
         num_lines = printProcessOutput(processes, shared_data->mutex);
 
