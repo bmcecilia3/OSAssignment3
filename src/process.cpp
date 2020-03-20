@@ -98,7 +98,14 @@ void Process::updateProcess(uint32_t current_time)
 {
     // use `current_time` to update turnaround time, wait time, burst times, 
     // cpu time, and remaining time
-    
+    turn_time = ((Process::getTurnaroundTime() * 1000.0) - current_time) / 1000.0;
+    wait_time = ((Process::getWaitTime() * 1000.0) - current_time) / 1000.0;
+    cpu_time = ((Process::getCpuTime() * 1000.0) - current_time) / 1000.0;
+    remain_time = ((Process::getRemainingTime() * 1000.0) - current_time) / 1000.0;
+    for(int i = 0; i < num_bursts; i++)
+    {
+    	burst_times[i] = burst_times[i] - current_time;
+    }
     //
 }
 
@@ -128,7 +135,11 @@ bool SjfComparator::operator ()(const Process *p1, const Process *p2)
 bool PpComparator::operator ()(const Process *p1, const Process *p2)
 {
     if (p1->getPriority() <= p2->getPriority())
+    {
         return true;
+    }
     else
+    {
         return false;
+    }
 }
