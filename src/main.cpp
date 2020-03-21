@@ -18,6 +18,7 @@ typedef struct SchedulerData {
     uint32_t context_switch;
     uint32_t time_slice;
     std::list<Process*> ready_queue;
+    std::list<Process*> io_queue;
     bool all_terminated;
 } SchedulerData;
 
@@ -62,6 +63,10 @@ int main(int argc, char **argv)
         {
             shared_data->ready_queue.push_back(p);
         }
+        if (p->getState() == Process::State::IO)
+        {
+            shared_data->io_queue.push_back(p);
+        }
     }
 
     // free configuration data from memory
@@ -82,7 +87,6 @@ int main(int argc, char **argv)
         clearOutput(num_lines);
 
         // start new processes at their appropriate start time
-        
 
         // determine when an I/O burst finishes and put the process back in the ready queue
 
@@ -141,18 +145,53 @@ int main(int argc, char **argv)
 
 void coreRunProcesses(uint8_t core_id, SchedulerData *shared_data)
 {
+    int i = 0;
+    int sTime;
+    int cTime;
+    int timeSlice = shared_data->time_slice;
+    Process *p = shared_data->ready_queue.front();
+    shared_data->ready_queue.pop_front();
     // Work to be done by each core idependent of the other cores
-    //  - Get process at front of ready queue
-    //  - Simulate the processes running until one of the following:
-    //     - CPU burst time has elapsed
-    //     - RR time slice has elapsed
-    //     - Process preempted by higher priority process
-    //  - Place the process back in the appropriate queue
-    //     - I/O queue if CPU burst finished (and process not finished)
-    //     - Terminated if CPU burst finished and no more bursts remain
-    //     - Ready queue if time slice elapsed or process was preempted
-    //  - Wait context switching time
+    while (shared_data->all_terminated == false)
+    {
+        //  - Get process at front of ready queue
+        if (p->getState() != Process::State::Terminated)
+        {
+        //  - Simulate the processes running until one of the following:
+            sTime = currentTime();
+            while (p->getRemainingTime() >=0 && timeSlice >= 0)  //add preemption condition here
+            {
+               //     - CPU burst time has elapsed
+               //     - RR time slice has elapsed
+               //     - Process preempted by higher priority process
+               cTime = currentTime();
+               timeSlice = timeSlice - (cTime - sTime);
+               p->updateProcess(cTime);
+            }
+            //  - Place the process back in the appropriate queue
+            
+            //     - I/O queue if CPU burst finished (and process not finished)
+            if (p->getRemainingTime() >0) //IO queue
+            {
+                shared_data->io_queue.push_back(p);
+            }
+            //     - Terminated if CPU burst finished and no more bursts remain
+            
+            else if (p->getRemainingTime() <=0) //Terminated
+            {
+                p->setState(Process::State::Terminated, currentTime());
+            }
+            //     - Ready queue if time slice elapsed or process was preempted
+            else if (timeSlice <=0) //add preemption condition here
+            {
+                shared_data->ready_queue.push_back(p);
+            }
+            
+        //  - Wait context switching time
+        usleep(shared_data->context_switch);
+        }
     //  * Repeat until all processes in terminated state
+    }
 }
 
 int printProcessOutput(std::vector<Process*>& processes, std::mutex& mutex)
